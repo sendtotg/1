@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram File Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(145deg, #0f0f23 0%, #1a1a3e 40%, #0d0d1a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 36px 32px 32px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: #2aabee;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .header-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .header h1 {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .config-section {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+        }
+
+        .config-section label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .config-section input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .config-section input:focus {
+            border-color: #2aabee;
+        }
+
+        .config-section input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+        }
+
+        .config-section .hint {
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .dropzone {
+            position: relative;
+            border: 2px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 16px;
+        }
+
+        .dropzone:hover,
+        .dropzone.dragover {
+            border-color: #2aabee;
+            background: rgba(42, 171, 238, 0.06);
+        }
+
+        .dropzone.has-file {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+            padding: 20px;
+        }
+
+        .dropzone-icon {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 12px;
+            background: rgba(42, 171, 238, 0.12);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropzone-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: #2aabee;
+        }
+
+        .dropzone-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 15px;
+        }
+
+        .dropzone-text strong {
+            color: #2aabee;
+            font-weight: 600;
+        }
+
+        .dropzone .file-info {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .dropzone.has-file .file-info {
+            display: flex;
+        }
+
+        .dropzone.has-file .dropzone-icon,
+        .dropzone.has-file .dropzone-text {
+            display: none;
+        }
+
+        .file-info .file-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(74, 222, 128, 0.12);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .file-info .file-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: #4ade80;
+        }
+
+        .file-info .file-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .file-info .file-name {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-info .file-size {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .file-info .remove-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .file-info .remove-btn:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #f87171;
+        }
+
+        .file-info .remove-btn svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .upload-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2aabee, #1d8fd8);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .upload-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(42, 171, 238, 0.3);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .upload-btn.loading {
+            background: linear-gradient(135deg, #1a5a8a, #134b75);
+            pointer-events: none;
+        }
+
+        .upload-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .upload-btn .spinner {
+            display: none;
+            animation: spin 1s linear infinite;
+        }
+
+        .upload-btn.loading .spinner {
+            display: block;
+        }
+
+        .upload-btn.loading .btn-icon {
+            display: none;
+        }
+
+        .upload-btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status {
+            margin-top: 14px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: rgba(74, 222, 128, 0.1);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .status.error {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .status.info {
+            background: rgba(42, 171, 238, 0.1);
+            border: 1px solid rgba(42, 171, 238, 0.2);
+            color: #60bdf0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 4px;
+            margin-top: 14px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2aabee, #4ade80);
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-icon">
+                <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.46c-.184 1.844-1.044 6.247-1.476 8.287-.183.868-.541 1.158-.89 1.187-.756.063-1.33-.498-2.062-.977-1.036-.678-1.621-1.099-2.628-1.76-1.162-.764-.41-1.183.254-1.87.174-.18 3.192-2.913 3.25-3.162.007-.031.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.79 1.133-5.056 3.33-.478.327-.912.486-1.302.478-.428-.01-1.252-.241-1.864-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            </div>
+            <div>
+                <h1>Telegram Upload</h1>
+                <p>Send files to your Telegram chat</p>
+            </div>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+            <input type="file" id="fileInput">
+            <div class="dropzone-icon">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+            </div>
+            <div class="dropzone-text">
+                <strong>Click to select</strong> or drag &amp; drop<br>a file here
+            </div>
+            <div class="file-info">
+                <div class="file-icon">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/></svg>
+                </div>
+                <div class="file-details">
+                    <div class="file-name" id="fileName">document.pdf</div>
+                    <div class="file-size" id="fileSize">2.4 MB</div>
+                </div>
+                <button class="remove-btn" id="removeBtn" title="Remove file">
+                    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <button class="upload-btn" id="uploadBtn">
+            <svg class="spinner" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <span class="btn-text">Upload to Telegram</span>
+        </button>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="fill" id="progressFill"></div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="footer">
+            Uses Telegram Bot API
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ── YOUR CREDENTIALS (hardcoded) ─────────────────────────
+            const BOT_TOKEN = '8721805332:AAFyyq68_Ixw99j1FFWwDzmgPOX2mtS-vAY';
+            const CHAT_ID   = '8606409949';
+            // ─────────────────────────────────────────────────────────
+
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('fileInput');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const removeBtn = document.getElementById('removeBtn');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const status = document.getElementById('status');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+
+            let selectedFile = null;
+
+            function formatSize(bytes) {
+                if (bytes === 0) return '0 B';
+                const units = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+            }
+
+            function setStatus(msg, type) {
+                status.textContent = msg;
+                status.className = 'status show ' + type;
+            }
+
+            function clearStatus() {
+                status.className = 'status';
+                status.textContent = '';
+            }
+
+            function setProgress(pct) {
+                progressBar.classList.add('show');
+                progressFill.style.width = Math.min(pct, 100) + '%';
+            }
+
+            function hideProgress() {
+                progressBar.classList.remove('show');
+                progressFill.style.width = '0%';
+            }
+
+            function handleFile(file) {
+                if (!file) return;
+                selectedFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = formatSize(file.size);
+                dropzone.classList.add('has-file');
+                uploadBtn.disabled = false;
+                clearStatus();
+                hideProgress();
+            }
+
+            function removeFile() {
+                selectedFile = null;
+                fileInput.value = '';
+                dropzone.classList.remove('has-file');
+                uploadBtn.disabled = true;
+                clearStatus();
+                hideProgress();
+            }
+
+            // Dropzone click
+            dropzone.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-btn')) return;
+                fileInput.click();
+            });
+
+            // File input change
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    handleFile(this.files[0]);
+                }
+            });
+
+            // Drag & drop
+            dropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            dropzone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            dropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Remove
+            removeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                removeFile();
+            });
+
+            // Upload
+            uploadBtn.addEventListener('click', async function() {
+                if (!selectedFile) return;
+
+                clearStatus();
+                uploadBtn.disabled = true;
+                uploadBtn.classList.add('loading');
+                setProgress(5);
+
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('document', selectedFile);
+                formData.append('caption', 'Uploaded via HackerAI \u2022 ' + selectedFile.name);
+
+                const xhr = new XMLHttpRequest();
+
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                const pct = Math.round((e.loaded / e.total) * 90) + 5;
+                                setProgress(pct);
+                            }
+                        });
+
+                        xhr.addEventListener('load', function() {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                setProgress(100);
+                                resolve(xhr.responseText);
+                            } else {
+                                reject(new Error('HTTP ' + xhr.status));
+                            }
+                        });
+
+                        xhr.addEventListener('error', function() {
+                            reject(new Error('Network error'));
+                        });
+
+                        xhr.addEventListener('abort', function() {
+                            reject(new Error('Upload aborted'));
+                        });
+
+                        xhr.open('POST', 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendDocument', true);
+                        xhr.send(formData);
+                    });
+
+                    const data = JSON.parse(result);
+                    if (data.ok) {
+                        setStatus('File sent successfully to Telegram!', 'success');
+                        setTimeout(() => {
+                            setProgress(100);
+                            setTimeout(() => hideProgress(), 600);
+                        }, 300);
+                    } else {
+                        setStatus('Telegram error: ' + (data.description || 'Unknown error'), 'error');
+                        hideProgress();
+                    }
+                } catch (err) {
+                    setStatus('Upload failed: ' + err.message, 'error');
+                    hideProgress();
+                } finally {
+                    uploadBtn.disabled = false;
+                    uploadBtn.classList.remove('loading');
+                }
+            });
+        })();
+    </script>
+</body>
+  </html>
